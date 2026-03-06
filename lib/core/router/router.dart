@@ -16,20 +16,6 @@ import 'package:cypcar/features/notifications/presentation/screens/notifications
 import 'package:cypcar/features/auth/presentation/screens/email_verification_screen.dart';
 import 'package:cypcar/features/auth/presentation/screens/forgot_password_screen.dart';
 
-Page<void> _fadePage(BuildContext context, GoRouterState state, Widget child) {
-  return CustomTransitionPage(
-    key: state.pageKey,
-    child: child,
-    transitionDuration: const Duration(milliseconds: 1000),
-    transitionsBuilder: (context, animation, _, child) {
-      return FadeTransition(
-        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-        child: child,
-      );
-    },
-  );
-}
-
 Page<void> _slidePage(GoRouterState state, Widget child) {
   return CupertinoPage(key: state.pageKey, child: child);
 }
@@ -45,7 +31,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/',
-        pageBuilder: (context, state) => _fadePage(context, state, const HomeScreen()),
+        pageBuilder: (context, state) => _slidePage(state, const HomeScreen()),
       ),
       GoRoute(
         path: '/login',

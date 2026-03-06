@@ -729,6 +729,7 @@ class _ImageCarousel extends StatelessWidget {
                   controller: controller,
                   itemCount: images.length,
                   onPageChanged: onPageChanged,
+                  physics: const _SwipeBackPagePhysics(),
                   itemBuilder: (_, i) {
                     final img = CachedNetworkImage(
                       imageUrl: images[i],
@@ -1926,5 +1927,21 @@ class _FullScreenViewerState extends State<_FullScreenViewer> {
         ),
       ),
     );
+  }
+}
+
+// İlk sayfada sağa swipe → gesture'ı PageView almaz, iOS swipe back devreye girer
+class _SwipeBackPagePhysics extends PageScrollPhysics {
+  const _SwipeBackPagePhysics() : super(parent: const ClampingScrollPhysics());
+
+  @override
+  _SwipeBackPagePhysics applyTo(ScrollPhysics? ancestor) => this;
+
+  @override
+  double applyBoundaryConditions(ScrollMetrics position, double value) {
+    if (value < position.minScrollExtent && position.pixels <= position.minScrollExtent) {
+      return value - position.minScrollExtent;
+    }
+    return super.applyBoundaryConditions(position, value);
   }
 }

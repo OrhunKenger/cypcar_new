@@ -117,7 +117,7 @@ class ListingsRepository {
   Listing _partialListing(String id, Map<String, dynamic> data) {
     return Listing(
       id: id,
-      price: (data['price'] as num).toDouble(),
+      price: double.parse(data['price'].toString()),
       currency: data['currency'] ?? 'TRY',
       isNegotiable: false,
       status: data['status'] ?? 'PENDING_REVIEW',

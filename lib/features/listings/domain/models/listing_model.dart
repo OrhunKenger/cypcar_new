@@ -77,7 +77,7 @@ class Listing {
 
   factory Listing.fromJson(Map<String, dynamic> j) => Listing(
         id: j['id'],
-        price: (j['price'] as num).toDouble(),
+        price: double.parse(j['price'].toString()),
         currency: j['currency'] ?? 'TRY',
         isNegotiable: j['is_negotiable'] ?? false,
         status: j['status'] ?? '',
@@ -212,7 +212,7 @@ class ListingDetail {
         id: j['id'],
         title: j['title'],
         description: j['description'],
-        price: (j['price'] as num).toDouble(),
+        price: double.parse(j['price'].toString()),
         currency: j['currency'] ?? 'TRY',
         isNegotiable: j['is_negotiable'] ?? false,
         status: j['status'] ?? '',
