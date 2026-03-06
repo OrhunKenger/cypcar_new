@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/storage/secure_storage.dart';
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../../features/listings/presentation/providers/listings_provider.dart';
+import '../../../../shared/providers/app_settings_provider.dart';
+import '../../../../shared/providers/catalog_provider.dart';
+import '../../../../shared/providers/exchange_rate_provider.dart';
 
 const _bgDark = Color(0xFF0D0000);
 const _bgCenter = Color(0xFF3A0A06);
@@ -49,7 +54,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       CurvedAnimation(parent: _shimmerCtrl, curve: Curves.easeOut),
     );
 
+    _warmupBackend();
     _runSequence();
+  }
+
+  /// Animasyon oynarken backend'i arka planda ısındır
+  void _warmupBackend() {
+    ref.read(appSettingsProvider);
+    ref.read(exchangeRateProvider);
+    ref.read(categoriesProvider);
+    ref.read(recentListingsProvider);
+    ref.read(authProvider);
   }
 
   Future<void> _runSequence() async {
@@ -122,8 +137,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // ── CC ──────────────────────────────────────────
-                _shimmerText('CC', 52, FontWeight.w900, -1),
+                // ── Logo ────────────────────────────────────────
+                AnimatedBuilder(
+                  animation: _shimmerCtrl,
+                  builder: (_, __) {
+                    return Image.asset(
+                      'assets/images/app_logo.png',
+                      width: 260,
+                      height: 260,
+                      fit: BoxFit.contain,
+                    );
+                  },
+                ),
 
                 const SizedBox(height: 28),
 

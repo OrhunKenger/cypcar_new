@@ -132,7 +132,7 @@ class SearchResultsScreen extends ConsumerWidget {
                     crossAxisCount: 2,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
-                    childAspectRatio: 0.62,
+                    childAspectRatio: 0.75,
                   ),
                   itemCount: listings.length,
                   itemBuilder: (context, i) => ListingCard(

@@ -24,7 +24,8 @@ const _categoryMeta = {
 };
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+  final bool showBottomNav;
+  const HomeScreen({super.key, this.showBottomNav = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -142,13 +143,15 @@ class HomeScreen extends ConsumerWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
-                  childAspectRatio: 0.62,
+                  childAspectRatio: 0.75,
                 ),
               ),
             ),
         ],
       ),
-      bottomNavigationBar: CypCarBottomNav(currentIndex: 1, settings: settings),
+      bottomNavigationBar: showBottomNav
+          ? CypCarBottomNav(currentIndex: 1, settings: settings)
+          : null,
     );
   }
 }
@@ -164,23 +167,15 @@ class _CypCarLogo extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 32,
-          height: 32,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
-            color: AppTheme.primary,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Center(
-            child: Text(
-              'CC',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-                height: 1,
-              ),
-            ),
+          clipBehavior: Clip.antiAlias,
+          child: Image.asset(
+            'assets/images/app_logo.png',
+            fit: BoxFit.cover,
           ),
         ),
         const SizedBox(width: 8),
@@ -434,6 +429,7 @@ class _VehicleTypeCards extends ConsumerWidget {
       crossAxisCount: 4,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
       children: categories.map((cat) {

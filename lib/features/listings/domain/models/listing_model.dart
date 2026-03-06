@@ -45,6 +45,7 @@ class Listing {
   final List<String> images;
   final bool isFavorited;
   final String userId;
+  final int viewCount;
   final DateTime createdAt;
   final DateTime expiresAt;
 
@@ -71,6 +72,7 @@ class Listing {
     required this.images,
     required this.isFavorited,
     required this.userId,
+    required this.viewCount,
     required this.createdAt,
     required this.expiresAt,
   });
@@ -98,6 +100,7 @@ class Listing {
         images: (j['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
         isFavorited: j['is_favorited'] ?? false,
         userId: j['user_id'] ?? '',
+        viewCount: j['view_count'] ?? 0,
         createdAt: DateTime.parse(j['created_at']),
         expiresAt: DateTime.parse(j['expires_at']),
       );
@@ -130,6 +133,7 @@ class Listing {
         images: images,
         isFavorited: isFavorited ?? this.isFavorited,
         userId: userId,
+        viewCount: viewCount,
         createdAt: createdAt,
         expiresAt: expiresAt,
       );
@@ -165,6 +169,7 @@ class ListingDetail {
   final String? userPhoto;
   final String? userPhone;
   final String? userWhatsapp;
+  final int viewCount;
   final DateTime createdAt;
   final DateTime expiresAt;
 
@@ -198,6 +203,7 @@ class ListingDetail {
     this.userPhoto,
     this.userPhone,
     this.userWhatsapp,
+    required this.viewCount,
     required this.createdAt,
     required this.expiresAt,
   });
@@ -238,6 +244,7 @@ class ListingDetail {
         userPhoto: j['owner_photo_url'],
         userPhone: j['owner_phone'],
         userWhatsapp: j['owner_whatsapp'],
+        viewCount: j['view_count'] ?? 0,
         createdAt: DateTime.parse(j['created_at']),
         expiresAt: DateTime.parse(j['expires_at']),
       );
@@ -272,6 +279,7 @@ class ListingDetail {
         userPhoto: userPhoto,
         userPhone: userPhone,
         userWhatsapp: userWhatsapp,
+        viewCount: viewCount,
         createdAt: createdAt,
         expiresAt: expiresAt,
       );

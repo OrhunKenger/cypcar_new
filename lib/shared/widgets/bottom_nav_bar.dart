@@ -8,11 +8,14 @@ import 'package:cypcar/shared/models/app_settings_model.dart';
 class CypCarBottomNav extends ConsumerWidget {
   final int currentIndex;
   final AppSettings? settings;
+  /// Sağlanırsa context.go() yerine bu callback kullanılır (MainTabsScreen için)
+  final void Function(int)? onTabTap;
 
   const CypCarBottomNav({
     super.key,
     required this.currentIndex,
     this.settings,
+    this.onTabTap,
   });
 
   @override
@@ -47,7 +50,7 @@ class CypCarBottomNav extends ConsumerWidget {
                 label: 'Favoriler',
                 isActive: currentIndex == 0,
                 iconColor: iconColor,
-                onTap: () => context.go('/favorites'),
+                onTap: () => onTabTap != null ? onTabTap!(0) : context.go('/favorites'),
               ),
 
               // Ana Sayfa (ortada, yüksek)
@@ -74,6 +77,10 @@ class CypCarBottomNav extends ConsumerWidget {
                   isActive: currentIndex == 2,
                   iconColor: iconColor,
                   onTap: () {
+                    if (onTabTap != null) {
+                      onTabTap!(2);
+                      return;
+                    }
                     final isLoggedIn = ref.read(authProvider.notifier).isLoggedIn;
                     if (!isLoggedIn) {
                       context.push('/login');
@@ -92,6 +99,10 @@ class CypCarBottomNav extends ConsumerWidget {
                   isActive: currentIndex == 3,
                   iconColor: iconColor,
                   onTap: () {
+                    if (onTabTap != null) {
+                      onTabTap!(2);
+                      return;
+                    }
                     final isLoggedIn = ref.read(authProvider.notifier).isLoggedIn;
                     if (!isLoggedIn) {
                       context.push('/login');
@@ -108,7 +119,7 @@ class CypCarBottomNav extends ConsumerWidget {
             top: -20,
             child: _HomeButton(
               isActive: currentIndex == 1,
-              onTap: () => context.go('/'),
+              onTap: () => onTabTap != null ? onTabTap!(1) : context.go('/'),
             ),
           ),
         ],

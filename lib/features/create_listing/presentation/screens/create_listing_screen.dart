@@ -152,7 +152,13 @@ const _stepLabels = ['Araç', 'Teknik', 'İlan', 'Konum', 'Fotoğraf', 'Boost'];
 // ─────────────────────────────────────────────────────────────────────────────
 
 class CreateListingScreen extends ConsumerStatefulWidget {
-  const CreateListingScreen({super.key});
+  /// Tab modunda back butonu çıkmak yerine Ana Sayfa'ya döner
+  final VoidCallback? onCloseInTabs;
+
+  const CreateListingScreen({
+    super.key,
+    this.onCloseInTabs,
+  });
 
   @override
   ConsumerState<CreateListingScreen> createState() => _CreateListingScreenState();
@@ -195,7 +201,13 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       onPopInvokedWithResult: (didPop, _) async {
         if (didPop) return;
         final canPop = await _onWillPop(state);
-        if (canPop && context.mounted) context.pop();
+        if (canPop && context.mounted) {
+          if (widget.onCloseInTabs != null) {
+            widget.onCloseInTabs!();
+          } else {
+            context.pop();
+          }
+        }
       },
       child: Scaffold(
         backgroundColor: isDark ? AppTheme.backgroundDark : const Color(0xFFF5F6FA),
@@ -248,7 +260,13 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
         onPressed: () async {
           final canPop = await _onWillPop(ref.read(clProvider));
-          if (canPop && mounted) context.pop();
+          if (canPop && mounted) {
+            if (widget.onCloseInTabs != null) {
+              widget.onCloseInTabs!();
+            } else {
+              context.pop();
+            }
+          }
         },
       ),
       title: Column(
@@ -291,9 +309,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   Widget? _buildBottomBar(CLState state, bool isDark, bool isPaid) {
-    // Vehicle step: show button only at model sub-step
-    if (state.step == CLStep.vehicle &&
-        state.vehicleSubStep != VehicleSubStep.model) {
+    if (state.step == CLStep.vehicle) {
       return null;
     }
 
@@ -1008,8 +1024,10 @@ class _SeriesGrid extends ConsumerWidget {
           itemBuilder: (_, i) => _TextCard(
             label: filtered[i].name,
             isDark: isDark,
-            onTap: () =>
-                ref.read(clProvider.notifier).selectSeries(filtered[i]),
+            onTap: () async {
+              final models = await ref.read(catalogRepositoryProvider).fetchModels(filtered[i].id);
+              ref.read(clProvider.notifier).selectSeries(filtered[i], hasModels: models.isNotEmpty);
+            },
           ),
         );
       },

@@ -140,6 +140,7 @@ class ListingsRepository {
       images: (data['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isFavorited: false,
       userId: data['user_id'] ?? '',
+      viewCount: data['view_count'] ?? 0,
       createdAt: DateTime.tryParse(data['created_at'] ?? '') ?? DateTime.now(),
       expiresAt: DateTime.tryParse(data['expires_at'] ?? '') ?? DateTime.now().add(const Duration(days: 30)),
     );

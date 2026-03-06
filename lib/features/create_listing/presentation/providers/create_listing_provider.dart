@@ -190,13 +190,21 @@ class CLNotifier extends StateNotifier<CLState> {
         model: null,
       );
 
-  void selectSeries(SeriesModel s) => state = state.copyWith(
-        series: s,
-        vehicleSubStep: VehicleSubStep.model,
-        model: null,
-      );
+  void selectSeries(SeriesModel s, {bool hasModels = true}) {
+    state = state.copyWith(
+      series: s,
+      vehicleSubStep: hasModels ? VehicleSubStep.model : VehicleSubStep.model,
+      model: null,
+    );
+    if (!hasModels) {
+      nextStep();
+    }
+  }
 
-  void selectModel(VehicleModelModel? m) => state = state.copyWith(model: m);
+  void selectModel(VehicleModelModel? m) {
+    state = state.copyWith(model: m);
+    nextStep();
+  }
 
   void vehicleGoBack() {
     switch (state.vehicleSubStep) {

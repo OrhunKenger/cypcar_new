@@ -13,7 +13,8 @@ import 'package:cypcar/shared/widgets/bottom_nav_bar.dart';
 import 'package:cypcar/shared/widgets/listing_card.dart';
 
 class FavoritesScreen extends ConsumerWidget {
-  const FavoritesScreen({super.key});
+  final bool showBottomNav;
+  const FavoritesScreen({super.key, this.showBottomNav = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,7 +45,9 @@ class FavoritesScreen extends ConsumerWidget {
             ],
           ),
         ),
-        bottomNavigationBar: CypCarBottomNav(currentIndex: 0, settings: settings),
+        bottomNavigationBar: showBottomNav
+            ? CypCarBottomNav(currentIndex: 0, settings: settings)
+            : null,
       );
     }
 
@@ -118,7 +121,9 @@ class FavoritesScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: CypCarBottomNav(currentIndex: 0, settings: settings),
+      bottomNavigationBar: showBottomNav
+          ? CypCarBottomNav(currentIndex: 0, settings: settings)
+          : null,
     );
   }
 }

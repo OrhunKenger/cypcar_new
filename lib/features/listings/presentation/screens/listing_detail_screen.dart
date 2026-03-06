@@ -24,7 +24,12 @@ import 'package:cypcar/shared/providers/exchange_rate_provider.dart';
 
 class ListingDetailScreen extends ConsumerStatefulWidget {
   final String listingId;
-  const ListingDetailScreen({super.key, required this.listingId});
+  final Listing? placeholderListing;
+  const ListingDetailScreen({
+    super.key,
+    required this.listingId,
+    this.placeholderListing,
+  });
 
   @override
   ConsumerState<ListingDetailScreen> createState() =>
@@ -332,13 +337,90 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
       backgroundColor:
           isDark ? AppTheme.backgroundDark : AppTheme.backgroundLight,
       body: asyncListing.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () {
+          if (widget.placeholderListing != null) {
+            return _buildPlaceholderBody(
+              widget.placeholderListing!,
+              isDark,
+              textPrimary,
+              textSecondary,
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
         error: (e, _) => _buildError(textPrimary, textSecondary),
         data: (listing) {
           _isFav ??= listing.isFavorited;
           return _buildBody(listing, isDark, textPrimary, textSecondary);
         },
       ),
+    );
+  }
+
+  Widget _buildPlaceholderBody(
+    Listing listing,
+    bool isDark,
+    Color textPrimary,
+    Color textSecondary,
+  ) {
+    return Stack(
+      children: [
+        CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              pinned: true,
+              backgroundColor:
+                  isDark ? AppTheme.backgroundDark : AppTheme.backgroundLight,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.pop(),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: 280,
+                child: Hero(
+                  tag: 'listing_img_${listing.id}',
+                  child: listing.images.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: listing.images.first,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        )
+                      : Container(color: const Color(0xFF1A1A1A)),
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 24,
+                      color: isDark ? Colors.white10 : Colors.black12,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      listing.displayTitle,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const Center(
+          child: CircularProgressIndicator(color: AppTheme.primary),
+        ),
+      ],
     );
   }
 

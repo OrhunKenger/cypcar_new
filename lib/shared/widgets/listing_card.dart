@@ -58,7 +58,7 @@ class ListingCard extends ConsumerWidget {
     final hasBoost = isPaidEnabled && listing.boostType != 'NONE';
 
     return GestureDetector(
-      onTap: () => context.push('/listing/${listing.id}'),
+      onTap: () => context.push('/listing/${listing.id}', extra: listing),
       child: Container(
         decoration: BoxDecoration(
           color: cardColor,
@@ -123,30 +123,40 @@ class ListingCard extends ConsumerWidget {
                     child: _FavoriteButton(listing: listing),
                   ),
 
-                  // Fotoğraf sayısı
-                  if (listing.images.isNotEmpty)
-                    Positioned(
-                      bottom: 6,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.black54,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.camera_alt, color: Colors.white, size: 10),
-                            const SizedBox(width: 3),
-                            Text(
-                              '${listing.images.length}',
-                              style: const TextStyle(color: Colors.white, fontSize: 10),
-                            ),
-                          ],
-                        ),
+                  // İstatistikler (İzlenme & Fotoğraf)
+                  Positioned(
+                    bottom: 6,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // İzlenme sayısı
+                          const Icon(Icons.visibility, color: Colors.white, size: 10),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${listing.viewCount}',
+                            style: const TextStyle(color: Colors.white, fontSize: 10),
+                          ),
+                          const SizedBox(width: 6),
+                          const Text('|', style: TextStyle(color: Colors.white38, fontSize: 10)),
+                          const SizedBox(width: 6),
+                          // Fotoğraf sayısı
+                          const Icon(Icons.camera_alt, color: Colors.white, size: 10),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${listing.images.length}',
+                            style: const TextStyle(color: Colors.white, fontSize: 10),
+                          ),
+                        ],
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -162,36 +172,36 @@ class ListingCard extends ConsumerWidget {
                     listing.displayTitle,
                     style: TextStyle(
                       color: textPrimary,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
 
                   // Yıl | km | vites
                   Row(
                     children: [
                       if (listing.year != null) ...[
-                        Icon(Icons.calendar_today_outlined, size: 10, color: textSecondary),
-                        const SizedBox(width: 2),
-                        Text('${listing.year}', style: TextStyle(fontSize: 10, color: textSecondary)),
-                        const SizedBox(width: 6),
+                        Icon(Icons.calendar_today_outlined, size: 12.5, color: textSecondary),
+                        const SizedBox(width: 3),
+                        Text('${listing.year}', style: TextStyle(fontSize: 12, color: textSecondary)),
+                        const SizedBox(width: 8),
                       ],
                       if (listing.mileage != null) ...[
-                        Icon(Icons.speed_outlined, size: 10, color: textSecondary),
-                        const SizedBox(width: 2),
+                        Icon(Icons.speed_outlined, size: 12.5, color: textSecondary),
+                        const SizedBox(width: 3),
                         Text(
                           '${NumberFormat('#,###', 'tr_TR').format(listing.mileage)} km',
-                          style: TextStyle(fontSize: 10, color: textSecondary),
+                          style: TextStyle(fontSize: 12, color: textSecondary),
                         ),
                       ],
                     ],
                   ),
 
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 6),
 
                   // Fiyat
                   Text(
@@ -200,23 +210,23 @@ class ListingCard extends ConsumerWidget {
                       color: displayCurrency == 'GBP'
                           ? const Color(0xFFE8C97A)
                           : AppTheme.primary,
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
 
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 4),
 
                   // Konum
                   if (listing.location != null)
                     Row(
                       children: [
-                        Icon(Icons.location_on_outlined, size: 10, color: textSecondary),
-                        const SizedBox(width: 2),
+                        Icon(Icons.location_on_outlined, size: 12.5, color: textSecondary),
+                        const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             listing.location!,
-                            style: TextStyle(fontSize: 10, color: textSecondary),
+                            style: TextStyle(fontSize: 12, color: textSecondary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),

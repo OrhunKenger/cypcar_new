@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cypcar/features/splash/presentation/screens/splash_screen.dart';
-import 'package:cypcar/features/home/presentation/screens/home_screen.dart';
 import 'package:cypcar/features/search/presentation/screens/search_screen.dart';
+import 'package:cypcar/shared/screens/main_tabs_screen.dart';
 import 'package:cypcar/features/search/presentation/screens/search_results_screen.dart';
 import 'package:cypcar/features/auth/presentation/screens/login_screen.dart';
 import 'package:cypcar/features/auth/presentation/screens/register_screen.dart';
@@ -15,9 +15,20 @@ import 'package:cypcar/features/favorites/presentation/screens/favorites_screen.
 import 'package:cypcar/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:cypcar/features/auth/presentation/screens/email_verification_screen.dart';
 import 'package:cypcar/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:cypcar/features/listings/domain/models/listing_model.dart';
 
 Page<void> _slidePage(GoRouterState state, Widget child) {
   return CupertinoPage(key: state.pageKey, child: child);
+}
+
+Page<void> _heroPage(GoRouterState state, Widget child) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(opacity: animation, child: child);
+    },
+  );
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -31,7 +42,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/',
-        pageBuilder: (context, state) => _slidePage(state, const HomeScreen()),
+        pageBuilder: (context, state) => _slidePage(state, const MainTabsScreen()),
       ),
       GoRoute(
         path: '/login',
@@ -59,9 +70,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/listing/:id',
-        pageBuilder: (context, state) => _slidePage(
+        pageBuilder: (context, state) => _heroPage(
           state,
-          ListingDetailScreen(listingId: state.pathParameters['id']!),
+          ListingDetailScreen(
+            listingId: state.pathParameters['id']!,
+            placeholderListing: state.extra as Listing?,
+          ),
         ),
       ),
       GoRoute(
