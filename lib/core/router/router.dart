@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +30,10 @@ Page<void> _fadePage(BuildContext context, GoRouterState state, Widget child) {
   );
 }
 
+Page<void> _slidePage(GoRouterState state, Widget child) {
+  return CupertinoPage(key: state.pageKey, child: child);
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
@@ -44,65 +49,72 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => _slidePage(state, const LoginScreen()),
       ),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterScreen(),
+        pageBuilder: (context, state) => _slidePage(state, const RegisterScreen()),
       ),
       GoRoute(
         path: '/search',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final cat = state.uri.queryParameters['category'];
-          return SearchScreen(initialCategory: cat);
+          return _slidePage(state, SearchScreen(initialCategory: cat));
         },
       ),
       GoRoute(
         path: '/search/results',
-        builder: (context, state) => SearchResultsScreen(
-          queryParams: Map<String, String>.from(state.uri.queryParameters),
+        pageBuilder: (context, state) => _slidePage(
+          state,
+          SearchResultsScreen(
+            queryParams: Map<String, String>.from(state.uri.queryParameters),
+          ),
         ),
       ),
       GoRoute(
         path: '/listing/:id',
-        builder: (context, state) =>
-            ListingDetailScreen(listingId: state.pathParameters['id']!),
+        pageBuilder: (context, state) => _slidePage(
+          state,
+          ListingDetailScreen(listingId: state.pathParameters['id']!),
+        ),
       ),
       GoRoute(
         path: '/profile/:id',
-        builder: (context, state) =>
-            ProfileScreen(userId: state.pathParameters['id']!),
+        pageBuilder: (context, state) => _slidePage(
+          state,
+          ProfileScreen(userId: state.pathParameters['id']!),
+        ),
       ),
       GoRoute(
         path: '/favorites',
-        builder: (context, state) => const FavoritesScreen(),
+        pageBuilder: (context, state) => _slidePage(state, const FavoritesScreen()),
       ),
       GoRoute(
         path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
+        pageBuilder: (context, state) => _slidePage(state, const NotificationsScreen()),
       ),
       GoRoute(
         path: '/email-verification',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final email = state.uri.queryParameters['email'] ?? '';
-          return EmailVerificationScreen(email: email);
+          return _slidePage(state, EmailVerificationScreen(email: email));
         },
       ),
       GoRoute(
         path: '/forgot-password',
-        builder: (context, state) => const ForgotPasswordScreen(),
+        pageBuilder: (context, state) => _slidePage(state, const ForgotPasswordScreen()),
       ),
       GoRoute(
         path: '/create-listing',
-        builder: (context, state) => const CreateListingScreen(),
+        pageBuilder: (context, state) => _slidePage(state, const CreateListingScreen()),
       ),
       GoRoute(
         path: '/my-listings',
-        builder: (context, state) => const _PlaceholderScreen(title: 'İlanlarım'),
+        pageBuilder: (context, state) => _slidePage(state, const _PlaceholderScreen(title: 'İlanlarım')),
       ),
       GoRoute(
         path: '/settings',
-        builder: (context, state) => const _PlaceholderScreen(title: 'Ayarlar'),
+        pageBuilder: (context, state) => _slidePage(state, const _PlaceholderScreen(title: 'Ayarlar')),
       ),
     ],
   );
