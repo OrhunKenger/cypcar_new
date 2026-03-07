@@ -95,7 +95,10 @@ class _MainTabsScreenState extends ConsumerState<MainTabsScreen> {
         onPageChanged: _onPageChanged,
         children: [
           // Index 0 — Favoriler
-          const FavoritesScreen(showBottomNav: false),
+          FavoritesScreen(
+            showBottomNav: false,
+            onBrowseListings: () => _onTabTap(1),
+          ),
 
           // Index 1 — Ana Sayfa
           const HomeScreen(showBottomNav: false),

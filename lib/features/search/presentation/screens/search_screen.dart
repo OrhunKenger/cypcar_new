@@ -463,16 +463,23 @@ class _MakeCard extends ConsumerWidget {
               height: 56,
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.white.withValues(alpha: 0.06)
-                    : Colors.grey.withValues(alpha: 0.06),
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.grey.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: make.logoUrl != null
                   ? Padding(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(6), // Padding düşürüldü (10 -> 6)
                       child: CachedNetworkImage(
                         imageUrl: make.logoUrl!,
                         fit: BoxFit.contain,
+                        placeholder: (context, url) => const Center(
+                          child: SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        ),
                         errorWidget: (_, __, ___) => _LetterAvatar(name: make.name),
                       ),
                     )

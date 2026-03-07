@@ -300,7 +300,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           CLStep.vehicle => _VehicleStep(state: state, isDark: isDark),
           CLStep.technical => _TechnicalStep(state: state, isDark: isDark),
           CLStep.info => _InfoStep(state: state, isDark: isDark),
-          CLStep.location => _LocationStep(state: state, isDark: isDark),
+          CLStep.location => _LocationStep(state: state, isDark: isDark, isPaid: isPaid),
           CLStep.photos => _PhotosStep(state: state, isDark: isDark),
           CLStep.boost => _BoostStep(isDark: isDark),
         },
@@ -1170,6 +1170,25 @@ class _TechnicalStep extends ConsumerWidget {
   final bool isDark;
   const _TechnicalStep({required this.state, required this.isDark});
 
+  void _autoProceedIfComplete(WidgetRef ref, CLState s, bool isPaid) {
+    final isMoto = s.category == 'MOTORSIKLET';
+    final vtOptions = _vehicleTypesByCategory[s.category] ?? const [];
+
+    bool isComplete = s.year != null &&
+        s.condition != null &&
+        s.fuelType != null &&
+        s.engineCc != null;
+
+    if (!isMoto) {
+      if (s.transmission == null || s.driveType == null) isComplete = false;
+    }
+    if (vtOptions.isNotEmpty && s.vehicleType == null) isComplete = false;
+
+    if (isComplete) {
+      ref.read(clProvider.notifier).nextStep(isPaidEnabled: isPaid);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(clProvider.notifier);
@@ -1177,165 +1196,164 @@ class _TechnicalStep extends ConsumerWidget {
     final vtOptions =
         _vehicleTypesByCategory[state.category] ?? const <(String, String)>[];
     final ccOptions = _getEngineCcOptions(state.category);
-
-    String? formatEngineCc(int? cc) {
-      if (cc == null) return null;
-      final match = ccOptions.where((o) => o.$1 == cc).firstOrNull;
-      return match?.$2;
-    }
+    final settings = ref.watch(appSettingsProvider).valueOrNull ?? AppSettings.defaults();
+    final isPaid = settings.isPaidFeaturesEnabled;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Year — required
+          // Year Picker
+          _SectionLabel(label: 'Model Yılı *', isDark: isDark),
           _FieldTile(
-            label: 'Model Yılı',
-            isRequired: true,
+            label: 'Yıl',
             value: state.year?.toString(),
-            placeholder: 'Seçin',
-            icon: Icons.calendar_today_rounded,
+            placeholder: 'Seçiniz',
+            icon: Icons.calendar_month_rounded,
             isDark: isDark,
             onTap: () async {
               final y = await showYearPicker(context, selected: state.year);
-              if (y != null) notifier.setYear(y);
+              if (y != null) {
+                notifier.setYear(y);
+                _autoProceedIfComplete(ref, ref.read(clProvider), isPaid);
+              }
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
-          // Condition — required
+          // Condition
           _SectionLabel(label: 'Araç Durumu *', isDark: isDark),
-          const SizedBox(height: 8),
-          _TwoOptionCards(
-            optionA: ('NEW', 'Sıfır', Icons.fiber_new_rounded),
-            optionB: ('USED', 'İkinci El', Icons.history_rounded),
+          _ChoiceChips(
+            options: const [('NEW', 'Sıfır'), ('USED', 'İkinci El')],
             selected: state.condition,
+            onSelect: (v) {
+              notifier.setCondition(v);
+              _autoProceedIfComplete(ref, ref.read(clProvider), isPaid);
+            },
             isDark: isDark,
-            onSelect: notifier.setCondition,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Transmission — zorunlu (motorsiklet hariç)
+          // Transmission
           if (!isMoto) ...[
             _SectionLabel(label: 'Şanzıman *', isDark: isDark),
-            const SizedBox(height: 8),
-            _TwoOptionCards(
-              optionA: ('MANUAL', 'Manuel', Icons.settings_rounded),
-              optionB: ('AUTOMATIC', 'Otomatik', Icons.auto_mode_rounded),
+            _ChoiceChips(
+              options: const [('MANUAL', 'Manuel'), ('AUTOMATIC', 'Otomatik')],
               selected: state.transmission,
+              onSelect: (v) {
+                notifier.setTransmission(v);
+                _autoProceedIfComplete(ref, ref.read(clProvider), isPaid);
+              },
               isDark: isDark,
-              onSelect: notifier.setTransmission,
-              allowDeselect: false,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
           ],
 
-          // Vehicle Type — zorunlu
+          // Vehicle Type
           if (vtOptions.isNotEmpty) ...[
-            _FieldTile(
-              label: 'Kasa Tipi',
-              isRequired: true,
-              value: vtOptions
-                  .where((o) => o.$1 == state.vehicleType)
-                  .firstOrNull
-                  ?.$2,
-              placeholder: 'Kasa tipini seçin',
-              icon: Icons.directions_car_outlined,
-              isDark: isDark,
-              onTap: () async {
-                final picked = await showPickerSheet(
-                  context,
-                  title: 'Kasa Tipi',
-                  options: vtOptions
-                      .map((o) => (value: o.$1, label: o.$2))
-                      .toList(),
-                  selected: state.vehicleType,
-                  isDark: isDark,
-                );
-                if (picked != null) notifier.setVehicleType(picked);
+            _SectionLabel(label: 'Kasa Tipi *', isDark: isDark),
+            _ChoiceChips(
+              options: vtOptions,
+              selected: state.vehicleType,
+              onSelect: (v) {
+                notifier.setVehicleType(v);
+                _autoProceedIfComplete(ref, ref.read(clProvider), isPaid);
               },
+              isDark: isDark,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
           ],
 
-          // Fuel Type — zorunlu
-          _FieldTile(
-            label: 'Yakıt Tipi',
-            isRequired: true,
-            value: _fuelTypes
-                .where((o) => o.$1 == state.fuelType)
-                .firstOrNull
-                ?.$2,
-            placeholder: 'Yakıt tipini seçin',
-            icon: Icons.local_gas_station_rounded,
-            isDark: isDark,
-            onTap: () async {
-              final picked = await showPickerSheet(
-                context,
-                title: 'Yakıt Tipi',
-                options: _fuelTypes
-                    .map((o) => (value: o.$1, label: o.$2))
-                    .toList(),
-                selected: state.fuelType,
-                isDark: isDark,
-              );
-              if (picked != null) notifier.setFuelType(picked);
+          // Fuel Type
+          _SectionLabel(label: 'Yakıt Tipi *', isDark: isDark),
+          _ChoiceChips(
+            options: _fuelTypes,
+            selected: state.fuelType,
+            onSelect: (v) {
+              notifier.setFuelType(v);
+              _autoProceedIfComplete(ref, ref.read(clProvider), isPaid);
             },
+            isDark: isDark,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
-          // Drive Type — zorunlu (motorsiklet hariç)
+          // Drive Type
           if (!isMoto) ...[
-            _FieldTile(
-              label: 'Çekiş',
-              isRequired: true,
-              value: _driveTypes
-                  .where((o) => o.$1 == state.driveType)
-                  .firstOrNull
-                  ?.$2,
-              placeholder: 'Çekiş tipini seçin',
-              icon: Icons.settings_input_component_rounded,
-              isDark: isDark,
-              onTap: () async {
-                final picked = await showPickerSheet(
-                  context,
-                  title: 'Çekiş Tipi',
-                  options: _driveTypes
-                      .map((o) => (value: o.$1, label: o.$2))
-                      .toList(),
-                  selected: state.driveType,
-                  isDark: isDark,
-                );
-                if (picked != null) notifier.setDriveType(picked);
+            _SectionLabel(label: 'Çekiş *', isDark: isDark),
+            _ChoiceChips(
+              options: _driveTypes,
+              selected: state.driveType,
+              onSelect: (v) {
+                notifier.setDriveType(v);
+                _autoProceedIfComplete(ref, ref.read(clProvider), isPaid);
               },
+              isDark: isDark,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
           ],
 
-          // Engine CC — zorunlu
-          _FieldTile(
-            label: 'Motor Hacmi',
-            isRequired: true,
-            value: formatEngineCc(state.engineCc),
-            placeholder: 'Motor hacmini seçin',
-            icon: Icons.engineering_rounded,
-            isDark: isDark,
-            onTap: () async {
-              final picked = await showPickerSheet(
-                context,
-                title: 'Motor Hacmi',
-                options: ccOptions
-                    .map((o) => (value: o.$1.toString(), label: o.$2))
-                    .toList(),
-                selected: state.engineCc?.toString(),
-                isDark: isDark,
-              );
-              if (picked != null) notifier.setEngineCc(int.tryParse(picked));
+          // Engine CC
+          _SectionLabel(label: 'Motor Hacmi *', isDark: isDark),
+          _ChoiceChips(
+            options: ccOptions.map((o) => (o.$1.toString(), o.$2)).toList(),
+            selected: state.engineCc?.toString(),
+            onSelect: (v) {
+              notifier.setEngineCc(int.tryParse(v));
+              _autoProceedIfComplete(ref, ref.read(clProvider), isPaid);
             },
+            isDark: isDark,
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ChoiceChips extends StatelessWidget {
+  final List<(String, String)> options;
+  final String? selected;
+  final Function(String) onSelect;
+  final bool isDark;
+
+  const _ChoiceChips({
+    required this.options,
+    required this.selected,
+    required this.onSelect,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 12,
+      children: options.map((opt) {
+        final bool isSelected = selected == opt.$1;
+        return GestureDetector(
+          onTap: () => onSelect(opt.$1),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: isSelected ? AppTheme.primary : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04)),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected ? AppTheme.primary : (isDark ? Colors.white12 : Colors.black12),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              opt.$2,
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected ? Colors.white : (isDark ? Colors.white70 : Colors.black87),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -1646,7 +1664,8 @@ class _ColorGrid extends ConsumerWidget {
 class _LocationStep extends ConsumerWidget {
   final CLState state;
   final bool isDark;
-  const _LocationStep({required this.state, required this.isDark});
+  final bool isPaid;
+  const _LocationStep({required this.state, required this.isDark, required this.isPaid});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1674,8 +1693,10 @@ class _LocationStep extends ConsumerWidget {
             children: _cyprusCities.map((city) {
               final isSelected = city.name == state.city;
               return GestureDetector(
-                onTap: () =>
-                    ref.read(clProvider.notifier).setCity(city.name),
+                onTap: () {
+                  ref.read(clProvider.notifier).setCity(city.name);
+                  ref.read(clProvider.notifier).nextStep(isPaidEnabled: isPaid);
+                },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   decoration: BoxDecoration(

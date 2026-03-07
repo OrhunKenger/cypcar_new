@@ -34,12 +34,13 @@ class SearchResultsScreen extends ConsumerWidget {
     final state = ref.watch(searchProvider);
     final exchangeRate = ref.watch(exchangeRateProvider).valueOrNull ?? ExchangeRate.fallback();
     final settings = ref.watch(appSettingsProvider).valueOrNull ?? AppSettings.defaults();
-    final displayCurrency = ref.watch(currencyProvider);
 
-    // String key — rebuild'lerde aynı istek tekrar atılmaz
-    final queryString = queryParams.entries
-        .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+    // Use live state to build query string instead of static queryParams
+    final currentParams = state.toQueryParams();
+    final queryString = currentParams.entries
+        .map((e) => '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value.toString())}')
         .join('&');
+    
     final resultsAsync = ref.watch(_resultsProvider(queryString));
 
     String title() {

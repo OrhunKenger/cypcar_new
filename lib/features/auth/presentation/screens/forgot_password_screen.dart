@@ -39,8 +39,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     _emailCtrl.dispose();
     _newPassCtrl.dispose();
     _confirmPassCtrl.dispose();
-    for (final c in _otpControllers) c.dispose();
-    for (final f in _otpFocusNodes) f.dispose();
+    for (final c in _otpControllers) {
+      c.dispose();
+    }
+    for (final f in _otpFocusNodes) {
+      f.dispose();
+    }
     super.dispose();
   }
 
@@ -271,11 +275,10 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           children: List.generate(6, (i) {
             return SizedBox(
               width: 48, height: 56,
-              child: RawKeyboardListener(
-                focusNode: FocusNode(),
-                onKey: (event) {
-                  if (event is RawKeyDownEvent &&
-                      event.logicalKey == LogicalKeyboardKey.backspace &&
+              child: KeyboardListener(
+                focusNode: FocusNode(), // Sadece klavye olaylarını dinlemek için geçici, TextField odağıyla çakışmaz
+                onKeyEvent: (event) {
+                  if (event.logicalKey == LogicalKeyboardKey.backspace &&
                       _otpControllers[i].text.isEmpty && i > 0) {
                     _otpFocusNodes[i - 1].requestFocus();
                   }
@@ -285,12 +288,18 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   focusNode: _otpFocusNodes[i],
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
+                  textAlignVertical: TextAlignVertical.center, // Dikeyde tam merkez
                   maxLength: 1,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontSize: 24, 
+                    fontWeight: FontWeight.w800,
+                    height: 1.0, // Satır yüksekliğini sabitle
+                  ),
                   decoration: InputDecoration(
                     counterText: '',
                     filled: true,
+                    contentPadding: EdgeInsets.zero, // İç boşluğu sıfırla ki sığsın
                     fillColor: isDark ? AppTheme.cardDark : Colors.white,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                     focusedBorder: OutlineInputBorder(

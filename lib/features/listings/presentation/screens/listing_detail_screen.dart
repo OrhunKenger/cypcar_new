@@ -333,27 +333,45 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
     final textSecondary =
         isDark ? AppTheme.textSecondaryDark : AppTheme.textSecondaryLight;
 
-    return Scaffold(
-      backgroundColor:
-          isDark ? AppTheme.backgroundDark : AppTheme.backgroundLight,
-      body: asyncListing.when(
-        loading: () {
-          if (widget.placeholderListing != null) {
-            return _buildPlaceholderBody(
-              widget.placeholderListing!,
-              isDark,
-              textPrimary,
-              textSecondary,
-            );
-          }
-          return const Center(child: CircularProgressIndicator());
-        },
-        error: (e, _) => _buildError(textPrimary, textSecondary),
-        data: (listing) {
-          _isFav ??= listing.isFavorited;
-          return _buildBody(listing, isDark, textPrimary, textSecondary);
-        },
-      ),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor:
+              isDark ? AppTheme.backgroundDark : AppTheme.backgroundLight,
+          body: asyncListing.when(
+            loading: () {
+              if (widget.placeholderListing != null) {
+                return _buildPlaceholderBody(
+                  widget.placeholderListing!,
+                  isDark,
+                  textPrimary,
+                  textSecondary,
+                );
+              }
+              return const Center(child: CircularProgressIndicator());
+            },
+            error: (e, _) => _buildError(textPrimary, textSecondary),
+            data: (listing) {
+              _isFav ??= listing.isFavorited;
+              return _buildBody(listing, isDark, textPrimary, textSecondary);
+            },
+          ),
+        ),
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 24,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onHorizontalDragEnd: (details) {
+              if ((details.primaryVelocity ?? 0) > 200) {
+                context.pop();
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 

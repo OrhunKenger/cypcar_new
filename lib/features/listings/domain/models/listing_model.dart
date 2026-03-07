@@ -1,9 +1,10 @@
 class VehicleMakeInfo {
   final String id;
   final String name;
-  VehicleMakeInfo({required this.id, required this.name});
+  final String? logoUrl;
+  VehicleMakeInfo({required this.id, required this.name, this.logoUrl});
   factory VehicleMakeInfo.fromJson(Map<String, dynamic> j) =>
-      VehicleMakeInfo(id: j['id'], name: j['name']);
+      VehicleMakeInfo(id: j['id'], name: j['name'], logoUrl: j['make_logo_url']);
 }
 
 class VehicleSeriesInfo {
@@ -94,7 +95,11 @@ class Listing {
         engineCc: j['engine_cc'],
         boostType: j['boost_type'] ?? 'NONE',
         category: j['category'] ?? '',
-        make: VehicleMakeInfo(id: j['make_id'] ?? '', name: j['make_name'] ?? ''),
+        make: VehicleMakeInfo(
+          id: j['make_id'] ?? '',
+          name: j['make_name'] ?? '',
+          logoUrl: j['make_logo_url'],
+        ),
         series: VehicleSeriesInfo(id: j['series_id'] ?? '', name: j['series_name'] ?? ''),
         model: j['model_id'] != null ? VehicleModelInfo(id: j['model_id'], name: j['model_name'] ?? '') : null,
         images: (j['images'] as List?)?.map((e) => e.toString()).toList() ?? [],
@@ -234,7 +239,11 @@ class ListingDetail {
         engineCc: j['engine_cc'],
         boostType: j['boost_type'] ?? 'NONE',
         category: j['category'] ?? '',
-        make: VehicleMakeInfo(id: j['make_id'] ?? '', name: j['make_name'] ?? ''),
+        make: VehicleMakeInfo(
+          id: j['make_id'] ?? '',
+          name: j['make_name'] ?? '',
+          logoUrl: j['make_logo_url'],
+        ),
         series: VehicleSeriesInfo(id: j['series_id'] ?? '', name: j['series_name'] ?? ''),
         model: j['model_id'] != null ? VehicleModelInfo(id: j['model_id'], name: j['model_name'] ?? '') : null,
         images: (j['images'] as List?)?.map((e) => e.toString()).toList() ?? [],

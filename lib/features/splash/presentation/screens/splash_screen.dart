@@ -143,8 +143,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   builder: (_, __) {
                     return Image.asset(
                       'assets/images/app_logo.png',
-                      width: 260,
-                      height: 260,
+                      width: 340,
+                      height: 340,
                       fit: BoxFit.contain,
                     );
                   },

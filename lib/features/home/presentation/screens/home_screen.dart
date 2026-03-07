@@ -12,6 +12,7 @@ import 'package:cypcar/shared/models/exchange_rate_model.dart';
 import 'package:cypcar/shared/providers/app_settings_provider.dart';
 import 'package:cypcar/shared/providers/catalog_provider.dart';
 import 'package:cypcar/shared/providers/exchange_rate_provider.dart';
+import 'package:cypcar/features/catalog/data/catalog_repository.dart';
 import 'package:cypcar/shared/widgets/bottom_nav_bar.dart';
 import 'package:cypcar/shared/widgets/listing_card.dart';
 
@@ -85,7 +86,7 @@ class HomeScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Arama',
+                    'Kategoriler',
                     style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 10),
@@ -166,22 +167,28 @@ class _CypCarLogo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 36,
-          height: 36,
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: Container(
+          width: 72,
+          height: 72,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
           ),
           clipBehavior: Clip.antiAlias,
           child: Image.asset(
             'assets/images/app_logo.png',
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
           ),
         ),
+        ),
         const SizedBox(width: 8),
-        const Text(
-          'CypCar',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
+          child: const Text(
+            'CypCar',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+          ),
         ),
       ],
     );
@@ -481,3 +488,4 @@ class _VehicleTypeCards extends ConsumerWidget {
     );
   }
 }
+

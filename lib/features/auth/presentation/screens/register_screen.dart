@@ -10,8 +10,8 @@ import 'package:cypcar/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:cypcar/features/auth/presentation/widgets/social_login_button.dart';
 
 const _countryCodes = [
-  (code: '+357', flag: '🇨🇾', name: 'Kıbrıs'),
   (code: '+90', flag: '🇹🇷', name: 'Türkiye'),
+  (code: '+357', flag: '🇨🇾', name: 'Kıbrıs'),
   (code: '+44', flag: '🇬🇧', name: 'İngiltere'),
   (code: '+49', flag: '🇩🇪', name: 'Almanya'),
   (code: '+33', flag: '🇫🇷', name: 'Fransa'),
@@ -32,7 +32,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _passConfirmCtrl = TextEditingController();
-  String _countryCode = '+357';
+  String _countryCode = '+90';
   bool _termsAccepted = false;
   String? _error;
 
@@ -176,7 +176,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _nameCtrl,
                   textInputAction: TextInputAction.next,
                   validator: (v) {
-                    if (v == null || v.trim().length < 2) return 'En az 2 karakter';
+                    if (v == null || v.trim().length < 6) return 'En az 6 karakter';
                     return null;
                   },
                 ),
@@ -192,7 +192,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   textInputAction: TextInputAction.next,
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Gerekli';
-                    if (!v.contains('@')) return 'Geçersiz e-posta';
+                    final emailRegex = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                    if (!emailRegex.hasMatch(v.trim())) return 'Geçersiz e-posta adresi';
                     return null;
                   },
                 ),
@@ -209,93 +210,146 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? AppTheme.cardDark : Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.black.withValues(alpha: 0.08),
-                    ),
-                  ),
-                  child: Row(
+                FormField<String>(
+                  validator: (v) {
+                    final val = _phoneCtrl.text.trim().replaceAll(' ', '');
+                    if (val.isEmpty) return 'Gerekli';
+                    
+                    if (_countryCode == '+90') {
+                      if (val.length != 10) return 'Numara 10 hane olmalıdır (5XX...)';
+                      if (!val.startsWith('5')) return 'Numara 5 ile başlamalıdır';
+                    } else {
+                      if (val.length < 7) return 'Geçersiz numara';
+                    }
+                    return null;
+                  },
+                  builder: (state) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Ülke kodu seçici
-                      GestureDetector(
-                        onTap: _showCountryPicker,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              right: BorderSide(
-                                color: isDark
+                      Container(
+                        decoration: BoxDecoration(
+                          color: isDark ? AppTheme.cardDark : Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: state.hasError
+                                ? Colors.redAccent.withValues(alpha: 0.5)
+                                : (isDark
                                     ? Colors.white.withValues(alpha: 0.08)
-                                    : Colors.black.withValues(alpha: 0.08),
-                              ),
-                            ),
+                                    : Colors.black.withValues(alpha: 0.08)),
                           ),
+                        ),
+                        child: IntrinsicHeight(
                           child: Row(
-                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text(
-                                _countryCodes
-                                    .firstWhere((c) => c.code == _countryCode)
-                                    .flag,
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                _countryCode,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark ? Colors.white70 : Colors.black.withValues(alpha: 0.70),
+                              // Ülke kodu seçici
+                              GestureDetector(
+                                onTap: _showCountryPicker,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 16),
+                                  decoration: BoxDecoration(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(14),
+                                      bottomLeft: Radius.circular(14),
+                                    ),
+                                    border: Border(
+                                      right: BorderSide(
+                                        color: isDark
+                                            ? Colors.white.withValues(alpha: 0.08)
+                                            : Colors.black.withValues(alpha: 0.08),
+                                      ),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        _countryCodes
+                                            .firstWhere(
+                                                (c) => c.code == _countryCode)
+                                            .flag,
+                                        style: const TextStyle(fontSize: 18),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        _countryCode,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: isDark
+                                              ? Colors.white70
+                                              : Colors.black
+                                                  .withValues(alpha: 0.70),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(Icons.keyboard_arrow_down_rounded,
+                                          size: 16,
+                                          color: isDark
+                                              ? Colors.white38
+                                              : Colors.black38),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 4),
-                              Icon(Icons.keyboard_arrow_down_rounded,
-                                  size: 16,
-                                  color: isDark ? Colors.white38 : Colors.black38),
+                              // Numara
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _phoneCtrl,
+                                  textAlignVertical: TextAlignVertical.center,
+                                  keyboardType: TextInputType.phone,
+                                  textInputAction: TextInputAction.next,
+                                  onChanged: (v) => state.didChange(v),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                        RegExp(r'[0-9 ]')),
+                                  ],
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark ? Colors.white : Colors.black87,
+                                  ),
+                                  decoration: InputDecoration(
+                                    isDense: false,
+                                    filled: true,
+                                    fillColor: Colors.transparent,
+                                    hintText: '5XX XXX XX XX',
+                                    hintStyle: TextStyle(
+                                      fontSize: 15,
+                                      color: isDark
+                                          ? Colors.white24
+                                          : Colors.black26,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    errorBorder: InputBorder.none,
+                                    focusedErrorBorder: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 14, vertical: 22),
+                                    errorStyle: const TextStyle(
+                                        fontSize: 0, height: 0),
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
                       ),
-                      // Numara
-                      Expanded(
-                        child: TextFormField(
-                          controller: _phoneCtrl,
-                          keyboardType: TextInputType.phone,
-                          textInputAction: TextInputAction.next,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(RegExp(r'[0-9 ]')),
-                          ],
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                            color: isDark ? Colors.white : Colors.black87,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: '5XX XXX XX XX',
-                            hintStyle: TextStyle(
-                              fontSize: 14,
-                              color: isDark ? Colors.white24 : Colors.black26,
-                              fontWeight: FontWeight.w400,
+                      if (state.hasError)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 6, left: 4),
+                          child: Text(
+                            state.errorText ?? '',
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
                             ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 16),
-                            errorStyle:
-                                const TextStyle(fontSize: 0, height: 0),
                           ),
-                          validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'Gerekli';
-                            final digits = v.replaceAll(' ', '');
-                            if (digits.length < 7) return 'Geçersiz numara';
-                            return null;
-                          },
                         ),
-                      ),
                     ],
                   ),
                 ),

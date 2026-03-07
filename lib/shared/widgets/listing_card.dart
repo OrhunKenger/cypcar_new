@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:cypcar/core/providers/currency_provider.dart';
 import 'package:cypcar/core/theme/app_theme.dart';
 import 'package:cypcar/features/auth/presentation/providers/auth_provider.dart';
+import 'package:cypcar/features/favorites/presentation/providers/favorites_provider.dart';
 import 'package:cypcar/features/listings/data/listings_repository.dart';
 import 'package:cypcar/features/listings/domain/models/listing_model.dart';
 import 'package:cypcar/features/listings/presentation/providers/listings_provider.dart';
@@ -281,6 +282,8 @@ class _FavoriteButtonState extends ConsumerState<_FavoriteButton> {
     try {
       await ref.read(listingsRepositoryProvider).toggleFavorite(widget.listing.id);
       ref.read(recentListingsProvider.notifier).updateFavorite(widget.listing.id, _isFav);
+      // Refresh favorites list if it exists
+      ref.invalidate(favoritesProvider);
     } catch (_) {
       setState(() => _isFav = !_isFav);
     }

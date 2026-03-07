@@ -13,6 +13,7 @@ class SearchFilters {
   final String? transmission;
   final String? driveType;
   final String? condition;
+  final String? color;
   final String sort;
 
   const SearchFilters({
@@ -25,6 +26,7 @@ class SearchFilters {
     this.transmission,
     this.driveType,
     this.condition,
+    this.color,
     this.sort = 'newest',
   });
 
@@ -38,11 +40,13 @@ class SearchFilters {
     String? transmission,
     String? driveType,
     String? condition,
+    String? color,
     String? sort,
     bool clearFuelType = false,
     bool clearTransmission = false,
     bool clearDriveType = false,
     bool clearCondition = false,
+    bool clearColor = false,
   }) =>
       SearchFilters(
         yearMin: yearMin ?? this.yearMin,
@@ -54,6 +58,7 @@ class SearchFilters {
         transmission: clearTransmission ? null : (transmission ?? this.transmission),
         driveType: clearDriveType ? null : (driveType ?? this.driveType),
         condition: clearCondition ? null : (condition ?? this.condition),
+        color: clearColor ? null : (color ?? this.color),
         sort: sort ?? this.sort,
       );
 
@@ -68,6 +73,7 @@ class SearchFilters {
       if (transmission != null) 'transmission': transmission,
       if (driveType != null) 'drive_type': driveType,
       if (condition != null) 'condition': condition,
+      if (color != null) 'color': color,
       'sort': sort,
     };
   }
@@ -81,7 +87,8 @@ class SearchFilters {
       fuelType != null ||
       transmission != null ||
       driveType != null ||
-      condition != null;
+      condition != null ||
+      color != null;
 }
 
 class SearchState {

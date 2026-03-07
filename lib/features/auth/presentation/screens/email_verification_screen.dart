@@ -175,11 +175,10 @@ class _EmailVerificationScreenState extends ConsumerState<EmailVerificationScree
                   return SizedBox(
                     width: 48,
                     height: 56,
-                    child: RawKeyboardListener(
+                    child: KeyboardListener(
                       focusNode: FocusNode(),
-                      onKey: (event) {
-                        if (event is RawKeyDownEvent &&
-                            event.logicalKey == LogicalKeyboardKey.backspace &&
+                      onKeyEvent: (event) {
+                        if (event.logicalKey == LogicalKeyboardKey.backspace &&
                             _controllers[i].text.isEmpty &&
                             i > 0) {
                           _focusNodes[i - 1].requestFocus();

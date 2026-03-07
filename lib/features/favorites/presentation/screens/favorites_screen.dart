@@ -14,7 +14,12 @@ import 'package:cypcar/shared/widgets/listing_card.dart';
 
 class FavoritesScreen extends ConsumerWidget {
   final bool showBottomNav;
-  const FavoritesScreen({super.key, this.showBottomNav = true});
+  final VoidCallback? onBrowseListings;
+  const FavoritesScreen({
+    super.key,
+    this.showBottomNav = true,
+    this.onBrowseListings,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -98,7 +103,9 @@ class FavoritesScreen extends ConsumerWidget {
               ),
             ),
             data: (favorites) => favorites.isEmpty
-                ? SliverFillRemaining(child: _EmptyFavorites())
+                ? SliverFillRemaining(
+                    child: _EmptyFavorites(onBrowse: onBrowseListings),
+                  )
                 : SliverPadding(
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 100),
                     sliver: SliverGrid(
@@ -114,7 +121,7 @@ class FavoritesScreen extends ConsumerWidget {
                         crossAxisCount: 2,
                         crossAxisSpacing: 10,
                         mainAxisSpacing: 10,
-                        childAspectRatio: 0.62,
+                        childAspectRatio: 0.75,
                       ),
                     ),
                   ),
@@ -129,6 +136,9 @@ class FavoritesScreen extends ConsumerWidget {
 }
 
 class _EmptyFavorites extends StatelessWidget {
+  final VoidCallback? onBrowse;
+  const _EmptyFavorites({this.onBrowse});
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -153,7 +163,13 @@ class _EmptyFavorites extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () => context.go('/'),
+            onPressed: () {
+              if (onBrowse != null) {
+                onBrowse!();
+              } else {
+                context.go('/');
+              }
+            },
             icon: const Icon(Icons.search, size: 18),
             label: const Text('İlanlara Göz At'),
           ),
