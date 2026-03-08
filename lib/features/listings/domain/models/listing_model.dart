@@ -115,7 +115,7 @@ class Listing {
     return parts.join(' ');
   }
 
-  Listing copyWith({bool? isFavorited}) => Listing(
+  Listing copyWith({bool? isFavorited, int? viewCount}) => Listing(
         id: id,
         price: price,
         currency: currency,
@@ -138,7 +138,7 @@ class Listing {
         images: images,
         isFavorited: isFavorited ?? this.isFavorited,
         userId: userId,
-        viewCount: viewCount,
+        viewCount: viewCount ?? this.viewCount,
         createdAt: createdAt,
         expiresAt: expiresAt,
       );

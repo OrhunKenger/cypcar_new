@@ -20,6 +20,9 @@ import 'package:cypcar/features/auth/presentation/providers/auth_provider.dart';
 import 'package:cypcar/features/listings/data/listings_repository.dart';
 import 'package:cypcar/features/listings/domain/models/listing_model.dart';
 import 'package:cypcar/features/listings/presentation/providers/listing_detail_provider.dart';
+import 'package:cypcar/features/listings/presentation/providers/listings_provider.dart';
+import 'package:cypcar/features/favorites/presentation/providers/favorites_provider.dart';
+import 'package:cypcar/features/profile/presentation/providers/profile_provider.dart';
 import 'package:cypcar/shared/providers/exchange_rate_provider.dart';
 
 class ListingDetailScreen extends ConsumerStatefulWidget {
@@ -45,9 +48,29 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
   bool _altCurrency = false;
   bool _sharingStory = false;
   bool _markingSold = false;
+  ProviderContainer? _container;
+  int? _lastViewCount;
+  String? _lastUserId;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _container ??= ProviderScope.containerOf(context);
+  }
 
   @override
   void dispose() {
+    final listingId = widget.listingId;
+    final container = _container;
+    final viewCount = _lastViewCount;
+    final userId = _lastUserId;
+    if (viewCount != null && container != null) {
+      Future(() {
+        container.read(recentListingsProvider.notifier).updateViewCount(listingId, viewCount);
+        container.read(favoritesProvider.notifier).updateViewCount(listingId, viewCount);
+        if (userId != null) container.invalidate(profileProvider(userId));
+      });
+    }
     _pageCtrl.dispose();
     super.dispose();
   }
@@ -327,6 +350,15 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final asyncListing = ref.watch(listingDetailProvider(widget.listingId));
+
+    // View count'u provider dispose race condition'ından kaçınmak için yerel cache'le
+    ref.listen(listingDetailProvider(widget.listingId), (_, next) {
+      next.whenData((d) {
+        _lastViewCount = d.viewCount;
+        _lastUserId = d.userId;
+      });
+    });
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textPrimary =
         isDark ? AppTheme.textPrimaryDark : AppTheme.textPrimaryLight;
@@ -366,7 +398,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
             behavior: HitTestBehavior.translucent,
             onHorizontalDragEnd: (details) {
               if ((details.primaryVelocity ?? 0) > 200) {
-                context.pop();
+                context.canPop() ? context.pop() : context.go('/');
               }
             },
           ),
@@ -391,7 +423,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                   isDark ? AppTheme.backgroundDark : AppTheme.backgroundLight,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.pop(),
+                onPressed: () => context.canPop() ? context.pop() : context.go('/'),
               ),
             ),
             SliverToBoxAdapter(
@@ -492,7 +524,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                   isDark ? AppTheme.backgroundDark : AppTheme.backgroundLight,
               leading: IconButton(
                 icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.pop(),
+                onPressed: () => context.canPop() ? context.pop() : context.go('/'),
               ),
               actions: [
                 // Paylaş
@@ -587,7 +619,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                                                 ? (displayCurrency == 'GBP' ? 'TRY' : 'GBP')
                                                 : displayCurrency) ==
                                             'GBP'
-                                        ? const Color(0xFFE8C97A)
+                                        ? const Color(0xFFB8960A)
                                         : AppTheme.primary,
                                   ),
                                 ),
@@ -616,7 +648,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Konum + Tarih
+                    // Konum + Tarih + Görüntülenme
                     Row(
                       children: [
                         if (listing.location != null) ...[
@@ -632,6 +664,13 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                             size: 13, color: textSecondary),
                         const SizedBox(width: 3),
                         Text(_timeAgo(listing.createdAt),
+                            style: TextStyle(
+                                fontSize: 12, color: textSecondary)),
+                        const SizedBox(width: 14),
+                        Icon(Icons.remove_red_eye_outlined,
+                            size: 13, color: textSecondary),
+                        const SizedBox(width: 3),
+                        Text('${listing.viewCount}',
                             style: TextStyle(
                                 fontSize: 12, color: textSecondary)),
                       ],
@@ -651,28 +690,16 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Özellikler kartı
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppTheme.cardDark : Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isDark ? Colors.white10 : Colors.black12,
-                        ),
-                      ),
-                      child: _SpecsSection(
-                        listing: listing,
-                        isDark: isDark,
-                        textPrimary: textPrimary,
-                        textSecondary: textSecondary,
-                        fuelLabel: _fuelLabel,
-                        transmissionLabel: _transmissionLabel,
-                        driveLabel: _driveLabel,
-                        engineLabel: _engineLabel,
-                        conditionLabel: _conditionLabel,
-                      ),
+                    _SpecsSection(
+                      listing: listing,
+                      isDark: isDark,
+                      textPrimary: textPrimary,
+                      textSecondary: textSecondary,
+                      fuelLabel: _fuelLabel,
+                      transmissionLabel: _transmissionLabel,
+                      driveLabel: _driveLabel,
+                      engineLabel: _engineLabel,
+                      conditionLabel: _conditionLabel,
                     ),
 
                     // Açıklama
@@ -979,66 +1006,167 @@ class _SpecsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rows = <_SpecRow>[
+    final items = <_SpecItem>[
       if (listing.mileage != null)
-        _SpecRow(
+        _SpecItem(
+          icon: Icons.speed_outlined,
           label: 'Kilometre',
           value: '${NumberFormat('#,###', 'tr_TR').format(listing.mileage)} km',
         ),
       if (listing.year != null)
-        _SpecRow(label: 'Model Yılı', value: '${listing.year}'),
+        _SpecItem(icon: Icons.calendar_today_outlined, label: 'Model Yılı', value: '${listing.year}'),
       if (listing.fuelType != null)
-        _SpecRow(label: 'Yakıt', value: fuelLabel(listing.fuelType)),
+        _SpecItem(icon: Icons.local_gas_station_outlined, label: 'Yakıt', value: fuelLabel(listing.fuelType)),
       if (listing.transmission != null)
-        _SpecRow(label: 'Şanzıman', value: transmissionLabel(listing.transmission)),
+        _SpecItem(icon: Icons.settings_outlined, label: 'Şanzıman', value: transmissionLabel(listing.transmission)),
       if (listing.engineCc != null)
-        _SpecRow(label: 'Motor Hacmi', value: engineLabel(listing.engineCc)),
+        _SpecItem(icon: Icons.bolt_outlined, label: 'Motor Hacmi', value: engineLabel(listing.engineCc)),
       if (listing.driveType != null)
-        _SpecRow(label: 'Çekiş', value: driveLabel(listing.driveType)),
+        _SpecItem(icon: Icons.drive_eta_outlined, label: 'Çekiş', value: driveLabel(listing.driveType)),
       if (listing.vehicleType != null)
-        _SpecRow(label: 'Kasa Tipi', value: _vehicleTypeLabel(listing.vehicleType!)),
+        _SpecItem(icon: Icons.directions_car_outlined, label: 'Kasa Tipi', value: _vehicleTypeLabel(listing.vehicleType!)),
       if (listing.condition.isNotEmpty)
-        _SpecRow(label: 'Durum', value: conditionLabel(listing.condition)),
+        _SpecItem(icon: Icons.verified_outlined, label: 'Durum', value: conditionLabel(listing.condition)),
       if (listing.color != null)
-        _SpecRow(label: 'Renk', value: listing.color!),
+        _SpecItem(colorValue: _colorMap[listing.color] ?? Colors.grey, label: 'Renk', value: listing.color!),
     ];
 
-    if (rows.isEmpty) return const SizedBox.shrink();
+    if (items.isEmpty) return const SizedBox.shrink();
 
-    return Column(
-      children: List.generate(rows.length, (i) {
-        final row = rows[i];
-        final isLast = i == rows.length - 1;
-        return Column(
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      childAspectRatio: 2.0,
+      children: items.map((item) => _buildCard(item)).toList(),
+    );
+  }
+
+  static const _colorMap = {
+    'Beyaz': Color(0xFFFFFFFF),
+    'Siyah': Color(0xFF1A1A1A),
+    'Gümüş': Color(0xFFC0C0C0),
+    'Gri': Color(0xFF808080),
+    'Kırmızı': Color(0xFFCC0000),
+    'Bordo': Color(0xFF800020),
+    'Mavi': Color(0xFF1565C0),
+    'Lacivert': Color(0xFF1A237E),
+    'Yeşil': Color(0xFF2E7D32),
+    'Sarı': Color(0xFFFFC107),
+    'Turuncu': Color(0xFFE65100),
+    'Kahverengi': Color(0xFF5D4037),
+    'Bej': Color(0xFFD7CCC8),
+    'Altın': Color(0xFFFFD700),
+    'Mor': Color(0xFF6A1B9A),
+  };
+
+  Widget _buildCard(_SpecItem item) {
+    final decoration = BoxDecoration(
+      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade50,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.07),
+      ),
+    );
+
+    if (item.colorValue != null) {
+      final isLight = item.colorValue == const Color(0xFFFFFFFF) ||
+          item.colorValue == const Color(0xFFFFC107) ||
+          item.colorValue == const Color(0xFFFFD700) ||
+          item.colorValue == const Color(0xFFD7CCC8);
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: decoration,
+        child: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    row.label,
-                    style: TextStyle(fontSize: 13, color: textSecondary),
-                  ),
-                  Text(
-                    row.value,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: textPrimary,
-                    ),
+            Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                color: item.colorValue,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isLight
+                      ? Colors.black.withValues(alpha: 0.2)
+                      : Colors.white.withValues(alpha: 0.15),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (item.colorValue!).withValues(alpha: 0.4),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
             ),
-            if (!isLast)
-              Divider(
-                height: 1,
-                color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.06),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Renk',
+                    style: TextStyle(fontSize: 10, color: textSecondary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    item.value,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
+            ),
           ],
-        );
-      }),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: decoration,
+      child: Row(
+        children: [
+          Icon(item.icon!, size: 18, color: AppTheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  item.label,
+                  style: TextStyle(fontSize: 10, color: textSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.value,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1073,10 +1201,12 @@ class _SpecsSection extends StatelessWidget {
   }
 }
 
-class _SpecRow {
+class _SpecItem {
+  final IconData? icon;
+  final Color? colorValue;
   final String label;
   final String value;
-  const _SpecRow({required this.label, required this.value});
+  const _SpecItem({this.icon, this.colorValue, required this.label, required this.value});
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

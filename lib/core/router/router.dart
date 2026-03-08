@@ -70,7 +70,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/listing/:id',
-        pageBuilder: (context, state) => _heroPage(
+        pageBuilder: (context, state) => _slidePage(
           state,
           ListingDetailScreen(
             listingId: state.pathParameters['id']!,

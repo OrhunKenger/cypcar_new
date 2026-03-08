@@ -175,6 +175,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   hint: 'Adınız Soyadınız',
                   controller: _nameCtrl,
                   textInputAction: TextInputAction.next,
+                  textCapitalization: TextCapitalization.words,
                   validator: (v) {
                     if (v == null || v.trim().length < 6) return 'En az 6 karakter';
                     return null;

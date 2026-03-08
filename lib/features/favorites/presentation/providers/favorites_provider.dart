@@ -24,6 +24,14 @@ class FavoritesNotifier extends StateNotifier<AsyncValue<List<Listing>>> {
     }
   }
 
+  void updateViewCount(String listingId, int viewCount) {
+    state.whenData((listings) {
+      state = AsyncValue.data(
+        listings.map<Listing>((l) => l.id == listingId ? l.copyWith(viewCount: viewCount) : l).toList(),
+      );
+    });
+  }
+
   Future<void> remove(String listingId) async {
     // Optimistic remove
     state.whenData((list) {

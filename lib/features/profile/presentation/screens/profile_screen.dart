@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:cypcar/core/theme/app_theme.dart';
@@ -138,6 +140,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _pickAndUploadPhoto(ImageSource source) async {
+    if (!kIsWeb) {
+      final permission = source == ImageSource.camera ? Permission.camera : Permission.photos;
+      final status = await permission.request();
+      if (!status.isGranted && !status.isLimited) {
+        if (mounted) _showPermissionDialog(source);
+        return;
+      }
+    }
+
     final file = await ImagePicker()
         .pickImage(source: source, imageQuality: 80, maxWidth: 800);
     if (file == null) return;
@@ -148,6 +159,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     } catch (e) {
       if (mounted) _showError(_parseError(e));
     }
+  }
+
+  void _showPermissionDialog(ImageSource source) {
+    final izinTuru = source == ImageSource.camera ? 'kamera' : 'galeri';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('İzin Gerekli'),
+        content: Text(
+          'Fotoğraf eklemek için $izinTuru iznine ihtiyacımız var. Ayarlar\'dan izin verebilirsiniz.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              openAppSettings();
+            },
+            child: Text('Ayarlara Git',
+                style: TextStyle(color: AppTheme.primary)),
+          ),
+        ],
+      ),
+    );
   }
 
   // ── Edit Sheets ───────────────────────────────────────────────────────
@@ -779,11 +817,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 childAspectRatio: 0.72,
               ),
               delegate: SliverChildBuilderDelegate(
-                (context, i) => ListingCard(
-                  listing: profile.listings[i],
-                  exchangeRate: exchangeRate,
-                  settings: settings,
-                ),
+                (context, i) {
+                  final listing = profile.listings[i];
+                  final badge = isOwn ? _statusBadge(listing.status) : null;
+                  if (badge == null) {
+                    return ListingCard(
+                      listing: listing,
+                      exchangeRate: exchangeRate,
+                      settings: settings,
+                    );
+                  }
+                  return Stack(
+                    children: [
+                      Opacity(
+                        opacity: 0.5,
+                        child: ListingCard(
+                          listing: listing,
+                          exchangeRate: exchangeRate,
+                          settings: settings,
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: badge,
+                      ),
+                    ],
+                  );
+                },
                 childCount: profile.listings.length,
               ),
             ),
@@ -806,7 +867,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Stack(
             alignment: Alignment.bottomRight,
             children: [
-              _buildAvatar(profile.fullName, profile.profilePhotoUrl, 84),
+              GestureDetector(
+                onTap: profile.profilePhotoUrl != null && profile.profilePhotoUrl!.isNotEmpty
+                    ? () => _showPhotoFullscreen(profile.profilePhotoUrl!)
+                    : null,
+                child: _buildAvatar(profile.fullName, profile.profilePhotoUrl, 84),
+              ),
               if (isOwn)
                 GestureDetector(
                   onTap: () => _showPhotoOptions(isDark, me),
@@ -873,6 +939,77 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget? _statusBadge(String status) {
+    switch (status) {
+      case 'PENDING_REVIEW':
+        return _badge('İnceleniyor', const Color(0xFFF59E0B));
+      case 'REJECTED':
+        return _badge('Reddedildi', Colors.red);
+      case 'EXPIRED':
+        return _badge('Süresi Doldu', Colors.grey);
+      default:
+        return null;
+    }
+  }
+
+  Widget _badge(String label, Color color) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      );
+
+  void _showPhotoFullscreen(String photoUrl) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black87,
+      barrierDismissible: true,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            ClipOval(
+              child: CachedNetworkImage(
+                imageUrl: photoUrl,
+                width: 280,
+                height: 280,
+                fit: BoxFit.cover,
+              ),
+            ),
+            Positioned(
+              top: -12,
+              right: -12,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(ctx),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 18),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -21,6 +21,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailFocus = FocusNode();
   final _passFocus = FocusNode();
   String? _error;
+  int _failedAttempts = 0;
 
   @override
   void dispose() {
@@ -42,7 +43,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final state = ref.read(authProvider);
     if (state.hasError) {
-      setState(() => _error = _parseError(state.error));
+      setState(() {
+        _error = _parseError(state.error);
+        _failedAttempts++;
+      });
     } else if (state.valueOrNull != null && mounted) {
       context.go('/');
     }
@@ -163,26 +167,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 const SizedBox(height: 8),
 
-                // Şifremi unuttum
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => context.push('/forgot-password'),
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      'Şifremi Unuttum',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.primary.withValues(alpha: 0.85),
+                // Şifremi unuttum — 3 başarısız denemeden sonra göster
+                if (_failedAttempts >= 3)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => context.push('/forgot-password'),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Şifremi Unuttum',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.primary.withValues(alpha: 0.85),
+                        ),
                       ),
                     ),
                   ),
-                ),
 
                 // Hata mesajı
                 if (_error != null) ...[
@@ -211,7 +216,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ],
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
 
                 // Giriş Yap butonu
                 SizedBox(

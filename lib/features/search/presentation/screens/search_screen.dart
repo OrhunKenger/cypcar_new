@@ -87,9 +87,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Expanded(child: _buildContent(state, isDark)),
         ],
       ),
-      bottomNavigationBar: state.step != SearchStep.model
-          ? _BottomSearchBar(state: state)
-          : null,
+      bottomNavigationBar: _BottomSearchBar(state: state),
     );
   }
 
@@ -648,44 +646,6 @@ class _ModelListState extends ConsumerState<_ModelList> {
 
         return Column(
           children: [
-            // "Tüm seri ilanlarını gör" butonu
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-              child: GestureDetector(
-                onTap: () => _goToResults(context, state),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.primary.withValues(alpha: 0.15),
-                        AppTheme.primary.withValues(alpha: 0.08),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: AppTheme.primary.withValues(alpha: 0.25),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.search_rounded, color: AppTheme.primary, size: 18),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Tüm ${widget.seriesName} ilanlarını gör',
-                        style: const TextStyle(
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
             Expanded(
               child: GridView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),

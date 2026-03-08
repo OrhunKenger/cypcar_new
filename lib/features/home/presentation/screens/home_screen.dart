@@ -219,7 +219,7 @@ class _CurrencyToggle extends ConsumerWidget {
           ),
         ),
         child: Text(
-          displayCurrency == 'TRY' ? '£  TL' : 'TL  £',
+          displayCurrency == 'TRY' ? '₺  £' : '£  ₺',
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,

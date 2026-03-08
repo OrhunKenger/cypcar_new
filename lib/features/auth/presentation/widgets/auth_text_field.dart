@@ -15,6 +15,7 @@ class AuthTextField extends StatefulWidget {
   final String? prefixText;
   final VoidCallback? onEditingComplete;
   final FocusNode? focusNode;
+  final TextCapitalization textCapitalization;
 
   const AuthTextField({
     super.key,
@@ -30,6 +31,7 @@ class AuthTextField extends StatefulWidget {
     this.prefixText,
     this.onEditingComplete,
     this.focusNode,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -108,6 +110,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
                 obscureText: widget.obscure ? _obscure : false,
                 keyboardType: widget.keyboardType,
                 textInputAction: widget.textInputAction,
+                textCapitalization: widget.textCapitalization,
                 onChanged: (v) => state.didChange(v),
                 inputFormatters: widget.inputFormatters,
                 onEditingComplete: widget.onEditingComplete,

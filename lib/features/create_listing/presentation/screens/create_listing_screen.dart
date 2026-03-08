@@ -1,9 +1,11 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:cypcar/core/theme/app_theme.dart';
 import 'package:cypcar/features/catalog/data/catalog_repository.dart';
@@ -110,7 +112,7 @@ List<(int, String)> _getEngineCcOptions(String? category) {
   } else {
     return [
       (600, '0.6L'), (800, '0.8L'), (1000, '1.0L'), (1100, '1.1L'),
-      (1200, '1.2L'), (1400, '1.4L'), (1500, '1.5L'), (1600, '1.6L'),
+      (1200, '1.2L'), (1300, '1.3L'), (1400, '1.4L'), (1500, '1.5L'), (1600, '1.6L'),
       (1800, '1.8L'), (2000, '2.0L'), (2200, '2.2L'), (2400, '2.4L'),
       (2500, '2.5L'), (2700, '2.7L'), (3000, '3.0L'), (3500, '3.5L'),
       (4000, '4.0L'), (4500, '4.5L'), (5000, '5.0L'), (6000, '6.0L+'),
@@ -1778,14 +1780,104 @@ class _PhotosStep extends ConsumerStatefulWidget {
 class _PhotosStepState extends ConsumerState<_PhotosStep> {
   final _picker = ImagePicker();
 
-  Future<void> _pickImages() async {
-    final remaining = 10 - ref.read(clProvider).images.length;
+  void _showSourceSheet() {
+    final isDark = widget.isDark;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: isDark ? AppTheme.cardDark : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.black12,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined, color: AppTheme.primary),
+              title: const Text('Galeriden Seç', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () { Navigator.pop(ctx); _pickFromGallery(); },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined, color: AppTheme.primary),
+              title: const Text('Kamera', style: TextStyle(fontWeight: FontWeight.w600)),
+              onTap: () { Navigator.pop(ctx); _pickFromCamera(); },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickFromGallery() async {
+    final remaining = 15 - ref.read(clProvider).images.length;
     if (remaining <= 0) return;
+
+    if (!kIsWeb) {
+      final status = await Permission.photos.request();
+      if (!status.isGranted && !status.isLimited) {
+        if (mounted) _showPermissionDialog(context, 'galeri');
+        return;
+      }
+    }
 
     final picked = await _picker.pickMultiImage(limit: remaining);
     if (picked.isNotEmpty) {
       ref.read(clProvider.notifier).addImages(picked);
     }
+  }
+
+  Future<void> _pickFromCamera() async {
+    final remaining = 15 - ref.read(clProvider).images.length;
+    if (remaining <= 0) return;
+
+    if (!kIsWeb) {
+      final status = await Permission.camera.request();
+      if (!status.isGranted) {
+        if (mounted) _showPermissionDialog(context, 'kamera');
+        return;
+      }
+    }
+
+    final photo = await _picker.pickImage(source: ImageSource.camera, imageQuality: 90);
+    if (photo != null) {
+      ref.read(clProvider.notifier).addImages([photo]);
+    }
+  }
+
+  void _showPermissionDialog(BuildContext context, String izinTuru) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('İzin Gerekli'),
+        content: Text(
+          'Fotoğraf eklemek için $izinTuru iznine ihtiyacımız var. Ayarlar\'dan izin verebilirsiniz.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Vazgeç'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              openAppSettings();
+            },
+            child: Text('Ayarlara Git',
+                style: TextStyle(color: AppTheme.primary)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -1819,7 +1911,7 @@ class _PhotosStepState extends ConsumerState<_PhotosStep> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  '${images.length}/10',
+                  '${images.length}/15',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -1828,9 +1920,9 @@ class _PhotosStepState extends ConsumerState<_PhotosStep> {
                 ),
               ),
               const Spacer(),
-              if (images.length < 10)
+              if (images.length < 15)
                 GestureDetector(
-                  onTap: _pickImages,
+                  onTap: _showSourceSheet,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
@@ -1871,7 +1963,7 @@ class _PhotosStepState extends ConsumerState<_PhotosStep> {
         if (images.isEmpty)
           Expanded(
             child: GestureDetector(
-              onTap: _pickImages,
+              onTap: _showSourceSheet,
               child: Container(
                 margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                 decoration: BoxDecoration(
@@ -1907,7 +1999,7 @@ class _PhotosStepState extends ConsumerState<_PhotosStep> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'En az 1, en fazla 10 fotoğraf',
+                      'En az 1, en fazla 15 fotoğraf',
                       style: TextStyle(
                           fontSize: 13,
                           color: isDark ? Colors.white38 : Colors.black38),
@@ -1923,11 +2015,11 @@ class _PhotosStepState extends ConsumerState<_PhotosStep> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
               onReorder: ref.read(clProvider.notifier).reorderImages,
               proxyDecorator: (child, index, animation) => child,
-              itemCount: images.length + (images.length < 10 ? 1 : 0),
+              itemCount: images.length + (images.length < 15 ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == images.length) {
                   return _AddPhotoTile(
-                      key: const ValueKey('add'), isDark: isDark, onTap: _pickImages);
+                      key: const ValueKey('add'), isDark: isDark, onTap: _showSourceSheet);
                 }
                 final image = images[index];
                 return _PhotoTile(

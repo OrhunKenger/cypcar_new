@@ -209,7 +209,7 @@ class ListingCard extends ConsumerWidget {
                     _formatPrice(context, displayCurrency),
                     style: TextStyle(
                       color: displayCurrency == 'GBP'
-                          ? const Color(0xFFE8C97A)
+                          ? const Color(0xFFB8960A)
                           : AppTheme.primary,
                       fontSize: 16.0,
                       fontWeight: FontWeight.w900,
